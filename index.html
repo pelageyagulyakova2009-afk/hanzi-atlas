@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>汉字星图 · Hanzi Atlas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500&family=Noto+Serif:ital,wght@0,400;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink-night: #0e1526;
+        --ink-deep: #0a101d;
+        --starlight: #e8e0ce;
+        --cinnabar: #c8432e;
+        --celadon: #6e9887;
+        --gold-leaf: #c9a24b;
+        --muted: #8a93a6;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: var(--ink-night);
+        color: var(--starlight);
+      }
+
+      #sky {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* Edges fall toward the deeper night; the center stays clear for the stars. */
+      .vignette {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(
+          ellipse at center,
+          transparent 42%,
+          var(--ink-deep) 100%
+        );
+      }
+
+      .title {
+        position: fixed;
+        top: 1.75rem;
+        left: 1.75rem;
+        margin: 0;
+        pointer-events: none;
+        font-weight: 400;
+        letter-spacing: 0.02em;
+      }
+
+      .title-zh {
+        font-family: "Noto Serif SC", "Noto Serif", serif;
+        font-size: 1.35rem;
+        font-weight: 500;
+        color: var(--starlight);
+      }
+
+      .title-en {
+        font-family: "Noto Serif", serif;
+        font-style: italic;
+        font-size: 0.95rem;
+        color: var(--muted);
+      }
+
+      #layouts {
+        position: fixed;
+        top: 1.35rem;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 0.15rem;
+        margin: 0;
+        padding: 0;
+      }
+
+      #layouts button {
+        margin: 0;
+        padding: 0.25rem 0.7rem;
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+        text-align: center;
+      }
+
+      #layouts button[aria-pressed="true"] {
+        color: var(--starlight);
+      }
+
+      #layouts button:focus-visible,
+      #find input:focus-visible,
+      #find select:focus-visible,
+      #hits button:focus-visible {
+        outline: 1px solid var(--starlight);
+        outline-offset: 3px;
+      }
+
+      #layouts .zh {
+        display: block;
+        font-family: "Noto Serif SC", serif;
+        font-size: 1rem;
+        font-weight: 500;
+      }
+
+      #layouts .en {
+        display: block;
+        font-family: "Noto Serif", serif;
+        font-style: italic;
+        font-size: 0.72rem;
+      }
+
+      #find {
+        position: fixed;
+        top: 5.4rem;
+        left: 50%;
+        z-index: 2;
+        transform: translateX(-50%);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem 0.7rem;
+        align-items: flex-end;
+        max-width: min(46rem, calc(100% - 2rem));
+        margin: 0;
+      }
+
+      #find label {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        color: var(--muted);
+        font-family: "Noto Serif SC", serif;
+        font-size: 0.85rem;
+      }
+
+      #find input,
+      #find select,
+      #hits button {
+        font-family: "Noto Serif", serif;
+        font-size: 0.9rem;
+        color: var(--starlight);
+        background: transparent;
+        border: 1px solid color-mix(in srgb, var(--starlight) 28%, transparent);
+        padding: 0.2rem 0.4rem;
+      }
+
+      #query {
+        min-width: 9rem;
+      }
+
+      #hits {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+        width: 100%;
+      }
+
+      #hits p {
+        margin: 0;
+        color: var(--muted);
+        font-family: "Noto Serif", serif;
+      }
+
+      #hits button {
+        font-family: "Noto Serif SC", serif;
+        cursor: pointer;
+      }
+
+      #meter {
+        position: fixed;
+        left: 1.25rem;
+        bottom: 1rem;
+        z-index: 2;
+        margin: 0;
+        pointer-events: none;
+        color: var(--muted);
+        font-family: "Noto Serif", serif;
+        font-size: 0.85rem;
+      }
+
+      #meter span + span {
+        margin-left: 0.9rem;
+      }
+
+      #meter b {
+        font-weight: 400;
+        color: var(--starlight);
+      }
+        position: fixed;
+        left: 1.75rem;
+        bottom: 1.75rem;
+        margin: 0;
+        max-width: 22rem;
+        font-family: "Noto Serif", serif;
+        font-size: 0.95rem;
+        color: var(--muted);
+      }
+
+      #tip {
+        position: fixed;
+        margin: 0;
+        pointer-events: none;
+        min-width: 6rem;
+        max-width: 16rem;
+      }
+
+      #tip p {
+        margin: 0;
+      }
+
+      #tip-char {
+        font-family: "Noto Serif SC", serif;
+        font-size: 1.6rem;
+        font-weight: 500;
+        color: var(--starlight);
+      }
+
+      #tip-pinyin {
+        font-family: "Noto Serif", serif;
+        font-style: italic;
+        font-size: 0.95rem;
+        color: var(--starlight);
+      }
+
+      #tip-meaning {
+        margin-top: 0.2rem;
+        font-family: "Noto Serif", serif;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      #dossier {
+        position: fixed;
+        top: 0;
+        right: 0;
+        z-index: 3;
+        box-sizing: border-box;
+        width: min(22rem, 100%);
+        height: 100%;
+        margin: 0;
+        padding: 1.25rem 1.25rem 2rem;
+        overflow: auto;
+        background: var(--ink-night);
+        border-left: 1px solid color-mix(in srgb, var(--starlight) 22%, transparent);
+        transform: translateX(100%);
+        transition: transform 0.35s ease;
+      }
+
+      #dossier[data-open="true"] {
+        transform: translateX(0);
+      }
+
+      #dossier h2,
+      #dossier h3,
+      #dossier p {
+        margin: 0;
+      }
+
+      #dossier h2 {
+        font-family: "Noto Serif SC", serif;
+        font-size: 1.15rem;
+        font-weight: 500;
+        color: var(--starlight);
+      }
+
+      #dossier h3 {
+        margin-top: 1.25rem;
+        font-family: "Noto Serif SC", serif;
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--starlight);
+      }
+
+      .dossier-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.75rem;
+      }
+
+      .dossier-glyph {
+        margin-top: 0.35rem;
+        font-family: "Noto Serif SC", serif;
+        font-size: 4.5rem;
+        line-height: 1;
+        color: var(--starlight);
+      }
+
+      #dossier svg {
+        display: block;
+        width: 9rem;
+        height: 9rem;
+        margin-top: 0.5rem;
+      }
+
+      #dossier svg path {
+        fill: none;
+        stroke: var(--starlight);
+        stroke-width: 48;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      #dossier button,
+      #dossier select {
+        font: inherit;
+        color: var(--starlight);
+        background: transparent;
+        border: 1px solid color-mix(in srgb, var(--starlight) 28%, transparent);
+        cursor: pointer;
+      }
+
+      #dossier button:focus-visible,
+      #dossier select:focus-visible {
+        outline: 1px solid var(--starlight);
+        outline-offset: 3px;
+      }
+
+      .replay {
+        padding: 0.2rem 0.55rem;
+        font-family: "Noto Serif SC", serif;
+      }
+
+      .replay .en {
+        font-family: "Noto Serif", serif;
+        font-style: italic;
+        color: var(--muted);
+      }
+
+      #dossier-pinyin {
+        margin-top: 0.35rem;
+        font-family: "Noto Serif", serif;
+        font-style: italic;
+        font-size: 1.15rem;
+        color: var(--starlight);
+      }
+
+      #dossier-meaning {
+        margin-top: 0.2rem;
+        font-family: "Noto Serif", serif;
+        color: var(--muted);
+      }
+
+      .part-row,
+      .occur-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-top: 0.45rem;
+        padding: 0;
+      }
+
+      .jump,
+      .part-quiet {
+        font-family: "Noto Serif SC", serif;
+        font-size: 1.15rem;
+      }
+
+      .jump {
+        padding: 0.1rem 0.4rem;
+      }
+
+      .part-quiet {
+        color: var(--muted);
+      }
+
+      .word-filter {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.45rem;
+        color: var(--muted);
+        font-family: "Noto Serif SC", serif;
+      }
+
+      .word-filter select {
+        padding: 0.15rem 0.35rem;
+        font-family: "Noto Serif", serif;
+      }
+
+      #dossier-words {
+        margin: 0.55rem 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      #dossier-words li {
+        margin-top: 0.55rem;
+      }
+
+      .word-zh {
+        display: block;
+        font-family: "Noto Serif SC", serif;
+        font-size: 1.15rem;
+        color: var(--starlight);
+      }
+
+      .word-py {
+        font-family: "Noto Serif", serif;
+        font-style: italic;
+        color: var(--starlight);
+      }
+
+      .word-en {
+        display: block;
+        font-family: "Noto Serif", serif;
+        color: var(--muted);
+      }
+
+      .dossier-empty {
+        margin-top: 0.4rem;
+        font-family: "Noto Serif", serif;
+        color: var(--muted);
+      }
+
+      .occur-row {
+        max-height: 9rem;
+        overflow: auto;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        #dossier {
+          transition: none;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .title {
+          top: 1rem;
+          left: 1rem;
+        }
+
+        .title-zh {
+          font-size: 1.1rem;
+        }
+
+        #layouts {
+          top: 4.4rem;
+          left: 0.75rem;
+          right: 0.75rem;
+          transform: none;
+          justify-content: space-between;
+        }
+
+        #find {
+          top: 8.2rem;
+          left: 0.75rem;
+          right: 0.75rem;
+          transform: none;
+          flex-direction: column;
+          align-items: stretch;
+          max-width: none;
+        }
+
+        #dossier {
+          width: 100%;
+        }
+
+        #meter {
+          left: 0.75rem;
+          bottom: 0.6rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="sky"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+    <h1 class="title">
+      <span class="title-zh">汉字星图</span>
+      <span class="title-en"> · Hanzi Atlas</span>
+    </h1>
+    <nav id="layouts" aria-label="布局">
+      <button type="button" data-layout="constellation" aria-pressed="true">
+        <span class="zh">星图</span>
+        <span class="en">constellations</span>
+      </button>
+      <button type="button" data-layout="levels" aria-pressed="false">
+        <span class="zh">阶</span>
+        <span class="en">levels</span>
+      </button>
+      <button type="button" data-layout="radicals" aria-pressed="false">
+        <span class="zh">宿</span>
+        <span class="en">radicals</span>
+      </button>
+      <button type="button" data-layout="phonetic" aria-pressed="false">
+        <span class="zh">形声</span>
+        <span class="en">phonetic</span>
+      </button>
+    </nav>
+    <form id="find">
+      <label>
+        搜索
+        <input id="query" type="search" autocomplete="off" enterkeyhint="search" />
+      </label>
+      <label>
+        级别
+        <select id="filter-hsk">
+          <option value="0">全部</option>
+          <option value="1">HSK 1</option>
+          <option value="2">HSK 2</option>
+          <option value="3">HSK 3</option>
+          <option value="4">HSK 4</option>
+          <option value="5">HSK 5</option>
+          <option value="6">HSK 6</option>
+        </select>
+      </label>
+      <label>
+        笔画
+        <select id="filter-strokes">
+          <option value="">全部</option>
+          <option value="few">1–5</option>
+          <option value="mid">6–10</option>
+          <option value="many">11+</option>
+        </select>
+      </label>
+      <label>
+        部首
+        <select id="filter-radical">
+          <option value="">全部</option>
+        </select>
+      </label>
+      <div id="hits"></div>
+    </form>
+    <p id="meter">
+      <span>字 <b id="meter-chars">0</b></span>
+      <span>线 <b id="meter-edges">0</b></span>
+      <span>帧 <b id="meter-fps">–</b></span>
+    </p>
+    <p id="status" hidden></p>
+    <div id="tip" hidden>
+      <p id="tip-char"></p>
+      <p id="tip-pinyin"></p>
+      <p id="tip-meaning"></p>
+    </div>
+    <aside id="dossier" data-open="false" aria-hidden="true" inert>
+      <div class="dossier-head">
+        <h2>字源</h2>
+        <button type="button" class="replay" data-replay>
+          再写 <span class="en">Replay</span>
+        </button>
+      </div>
+      <p class="dossier-glyph" data-glyph></p>
+      <svg data-strokes viewBox="0 0 1024 1024" aria-hidden="true"></svg>
+      <p id="dossier-pinyin" data-pinyin></p>
+      <p id="dossier-meaning" data-meaning></p>
+      <h3>部件</h3>
+      <div class="part-row" data-parts></div>
+      <h3>词语</h3>
+      <label class="word-filter">
+        级别
+        <select data-filter aria-label="HSK">
+          <option value="0">全部</option>
+          <option value="1">HSK 1</option>
+          <option value="2">HSK 2</option>
+          <option value="3">HSK 3</option>
+          <option value="4">HSK 4</option>
+          <option value="5">HSK 5</option>
+          <option value="6">HSK 6</option>
+        </select>
+      </label>
+      <ul id="dossier-words" data-words></ul>
+      <h3>见于</h3>
+      <div class="occur-row" data-occurs></div>
+    </aside>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

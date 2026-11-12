@@ -1,0 +1,70 @@
+---
+description: Hanzi Atlas — design system, tech constraints and working rules. Always on.
+globs:
+alwaysApply: true
+---
+
+# Hanzi Atlas — project rules
+
+A 3D interactive atlas of Chinese characters (汉字星图). Characters are
+stars; shared components draw constellation lines. Read `BRIEF.md` for the
+full concept before anything else. Follow `PLAN.md` stage by stage — do only
+the stage the user names, then stop and wait.
+
+## Golden rules
+- **The user must be able to explain every line at a university defense.**
+  Favor clear, readable code over clever code. Add short comments that say
+  *why*, not *what*. No unexplained magic numbers.
+- Do only the current stage from `PLAN.md`. Do not jump ahead. End each
+  stage by printing a short "what changed / how to run / how to verify" note.
+- Never invent linguistic data. All character data comes from the real
+  sources in the data pipeline (Make Me a Hanzi, CC-CEDICT, Unihan, HSK).
+  If data is missing, show a graceful empty state — never fake a definition
+  or a stroke order.
+- Keep it dependency-light. Three.js r170 + Vite only unless `PLAN.md` asks
+  for more. No React, no UI framework, no CSS framework.
+
+## Tech
+- Web client: **vanilla Three.js r170**, ES modules, Vite dev server.
+- Data is prepared offline by Node scripts in `/scripts` into a compact
+  `/public/data/atlas.json`. The client only ever loads the finished JSON —
+  no parsing of raw sources in the browser.
+- Thousands of glyphs must stay at ~60 FPS: use `InstancedMesh` (or points +
+  a glyph atlas texture), not one mesh per character. Build the graph once;
+  animate by interpolating positions, never by rebuilding the scene.
+- `OrbitControls` for camera. Respect `prefers-reduced-motion`.
+
+## Visual system (do not drift from this)
+Deep night-indigo void, aged-paper starlight, cinnabar + celadon accents —
+ink-and-cinnabar on old silk, **never neon / cyberpunk**.
+
+```css
+:root {
+  --ink-night:   #0E1526; /* base background */
+  --ink-deep:    #0A101D; /* far plane, vignette */
+  --starlight:   #E8E0CE; /* glyphs, primary text */
+  --cinnabar:    #C8432E; /* selected char + its constellation lines */
+  --celadon:     #6E9887; /* shared-radical highlight */
+  --gold-leaf:   #C9A24B; /* key radicals, rare accent */
+  --muted:       #8A93A6; /* secondary UI text */
+}
+```
+
+- Type: **Noto Serif SC** for glyphs + headings (Song style is the
+  typographic hero); **Noto Serif** for Latin/pinyin, pinyin in italic.
+  Load from Google Fonts. Do NOT use a monospace font for data labels — it's
+  a generated-page tell.
+- Avoid these tells: ALL-CAPS tracked eyebrow labels; one word in a heading
+  accented in a different color; `A · B · C` middle-dot meta strings; a `→`
+  glued onto link/button text; identical rounded cards with the same soft
+  grey shadow. Structure (borders, dividers, numbers) must encode real
+  information, not decorate.
+- Motion: exactly one orchestrated moment on load (see BRIEF). Otherwise,
+  motion only answers a user action (select, open, switch layout). No
+  fade-up on every element.
+- Bilingual by default: 中文 label first, English/pinyin as the quiet
+  secondary. UI copy is plain and active ("Switch layout", not "Toggle").
+
+## Quality floor (every stage)
+Responsive to mobile, visible keyboard focus, reduced-motion respected,
+accessible contrast. Don't announce it — just meet it.
